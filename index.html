@@ -154,6 +154,15 @@
             background-color: #0056b3;
         }
         
+        /* NOVO ESTILO: Botão de Zerar Registros (Alerta) */
+        #btnZerarRegistros {
+            background-color: #dc3545; /* Vermelho/perigo */
+            margin-top: 10px; 
+        }
+        #btnZerarRegistros:hover {
+            background-color: #c82333;
+        }
+        
         /* Estilo para o botão Sair do RH */
         .rh-logout-btn {
             background-color: #6c757d; /* Cor cinza do Sair */
@@ -401,6 +410,9 @@
             <h3>Acesso Equipe de RH</h3>
             <p style="margin-bottom: 20px;">Clique no botão abaixo para baixar a planilha completa com todos os registros de ajuste de ponto.</p>
             <a id="downloadLink" href="/api/download" class="action-button">⬇️ Baixar Planilha de Registros (CSV)</a>
+            
+            <button type="button" onclick="confirmClearRecords()" class="action-button" id="btnZerarRegistros">🗑️ Zerar Todos os Registros</button>
+            
             <button type="button" onclick="logout()" class="action-button rh-logout-btn">Sair</button>
         </div>
         <div id="form-view" style="display: none;">
@@ -443,7 +455,7 @@
                 </div>
 
                 <div class="phase-block" id="phase-colaborador">
-                    <h3>Informações do Colaborador</h3>
+                    <h3>Dados do Colaborador</h3>
                     <div class="form-group">
                         <label for="nomeColaboradorInput">Nome Completo:</label>
                         <input type="text" id="nomeColaboradorInput" name="nomeColaboradorInput" placeholder="Nome Completo" required>
@@ -558,6 +570,8 @@
         
         // --- Login do RH ---
         const HR_LOGIN = 'equipe.rh'; 
+        // NOVO: Constante para a confirmação de segurança
+        const HR_LOGIN_CONFIRMATION = 'equipe.rh'; 
         
         // --- LISTA DE GESTORES AUTORIZADOS PARA LOGIN ---
         const authorizedUsers = {
@@ -611,7 +625,7 @@
                 
                 // Feedback
                 feedbackMessage.className = 'alert-message alert-success';
-                feedbackMessage.innerHTML = `✅ Acesso liberado! Logado como ${user.nome}.<br>Por favor, informe seu e-mail.`;
+                feedbackMessage.textContent = `✅ Acesso liberado! Logado como ${user.nome} ${user.filial}.<br>Por favor, informe seu e-mail.`;
                 feedbackMessage.style.display = 'block';
                 
                 // Bloqueia campos preenchidos e permite a edição do email
@@ -835,7 +849,7 @@
                     <p><strong>E-mail:</strong> ${gestorEmail}</p>
                     <p><strong>Filial:</strong> ${filial}</p>
                 </div>
-                <h3 class="review-header" style="text-align: left;">Resumo dos Ajustes Registrados - ${allCollectedData.length} Colaborador(es):</h3>
+                <h3 class="review-header" style="text-align: left;">Registrados - ${allCollectedData.length} Ajustes:</h3>
             `;
             if (allCollectedData.length === 0) {
                 html += '<p>Nenhum ajuste encontrado para revisão.</p>';
@@ -983,6 +997,65 @@
             toggleEditMode(index);
         }
         
+        // --- FUNÇÃO PARA ZERAR REGISTROS (Apenas RH) ---
+        function confirmClearRecords() {
+            const confirmation = prompt("ATENÇÃO: Você está prestes a apagar TODOS os registros de ajustes de ponto (IRREVERSÍVEL).\n\nPara confirmar a exclusão, digite o login 'equipe.rh' abaixo:");
+
+            if (confirmation === null) {
+                // Usuário cancelou
+                return;
+            }
+            
+            if (confirmation.trim().toLowerCase() === HR_LOGIN_CONFIRMATION) {
+                clearRecords();
+            } else {
+                feedbackMessage.className = 'alert-message alert-error';
+                feedbackMessage.textContent = '❌ Confirmação de login inválida. Os registros NÃO foram apagados.';
+                feedbackMessage.style.display = 'block';
+            }
+        }
+
+        async function clearRecords() {
+            const btn = document.getElementById('btnZerarRegistros');
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Apagando... Aguarde...';
+            
+            // Alerta que o processo pode demorar
+            feedbackMessage.className = 'alert-message alert-error';
+            feedbackMessage.textContent = '⚠️ Processando exclusão. Não feche a tela.';
+            feedbackMessage.style.display = 'block';
+
+            try {
+                // CHAMA A FUNÇÃO VERCEL: /api/limpar (método DELETE)
+                const response = await fetch('/api/limpar', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    feedbackMessage.className = 'alert-message alert-success';
+                    feedbackMessage.textContent = `✅ Sucesso! ${result.count || 'Todos os'} registros foram apagados da planilha.`;
+                    // Após a limpeza, força o logout para garantir segurança
+                    setTimeout(logout, 3000); 
+                } else {
+                    feedbackMessage.className = 'alert-message alert-error';
+                    feedbackMessage.textContent = `❌ Erro ao zerar os registros: ${result.message || 'Erro desconhecido'}`;
+                }
+
+            } catch (error) {
+                feedbackMessage.className = 'alert-message alert-error';
+                feedbackMessage.textContent = `❌ Falha ao conectar com o servidor para limpar: ${error.message}`;
+            }
+            
+            feedbackMessage.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+
         // --- FUNÇÃO DE ENVIO ATUALIZADA PARA CHAMAR A VERCEL FUNCTION ---
         
         async function sendFinalData() {
@@ -1048,6 +1121,3 @@
     </script>
 </body>
 </html>
-
-
-
