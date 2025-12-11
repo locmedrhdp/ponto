@@ -813,9 +813,9 @@
             toggleEditMode(index);
         }
         
-        // --- Função de Envio de Dados (A ser implementada no Backend) ---
+        // --- FUNÇÃO DE ENVIO ATUALIZADA PARA CHAMAR A VERCEL FUNCTION ---
         
-        function sendFinalData() {
+        async function sendFinalData() {
             btnEnviarAjustesFinais.disabled = true;
             btnEnviarAjustesFinais.textContent = 'Enviando...';
 
@@ -826,25 +826,46 @@
                 ajustesMultiColaborador: allCollectedData 
             };
             
-            console.log('Dados prontos para envio ao Backend Serverless:', dataForBackend);
+            try {
+                // CHAMA A FUNÇÃO VERCEL: /api/registrar
+                const response = await fetch('/api/registrar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dataForBackend),
+                });
 
-            // SIMULAÇÃO DE ENVIO:
-            setTimeout(() => {
-                feedbackMessage.className = 'alert-message alert-success';
-                feedbackMessage.textContent = `✅ Ajustes para ${allCollectedData.length} colaborador(es) enviados com sucesso! (Simulação).`;
-                feedbackMessage.style.display = 'block';
-                
-                // Limpa TUDO após o envio bem-sucedido
-                allCollectedData = [];
-                ajustePontoForm.reset();
-                resetCollaboratorFields();
-                unlockGestorFields(); 
-                switchToFormView(); 
-                
-                btnEnviarAjustesFinais.disabled = false;
-                btnEnviarAjustesFinais.textContent = 'Enviar Ajustes';
-            }, 2000); 
+                const result = await response.json();
+
+                if (response.ok) {
+                    feedbackMessage.className = 'alert-message alert-success';
+                    feedbackMessage.textContent = `✅ Ajustes para ${allCollectedData.length} colaborador(es) enviados com sucesso!`;
+                    
+                    // Limpa TUDO após o envio bem-sucedido
+                    allCollectedData = [];
+                    ajustePontoForm.reset();
+                    resetCollaboratorFields();
+                    unlockGestorFields(); 
+                    switchToFormView(); 
+                } else {
+                    feedbackMessage.className = 'alert-message alert-error';
+                    feedbackMessage.textContent = `❌ Erro no envio (${response.status}): ${result.message || 'Erro de comunicação.'}`;
+                }
+
+            } catch (error) {
+                feedbackMessage.className = 'alert-message alert-error';
+                feedbackMessage.textContent = `❌ Falha ao conectar com o servidor: ${error.message}`;
+            }
+
+            feedbackMessage.style.display = 'block';
+            
+            // Atualiza o botão, o número de colaboradores será 0 se o envio foi bem-sucedido
+            const numColaboradoresRestantes = allCollectedData.length;
+            btnEnviarAjustesFinais.disabled = false;
+            btnEnviarAjustesFinais.textContent = `Enviar Ajustes (${numColaboradoresRestantes} Colaborador(es))`;
         }
+
 
         // --- Inicialização ---
         document.addEventListener('DOMContentLoaded', () => {
