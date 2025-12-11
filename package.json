@@ -7,7 +7,7 @@
     "start": "node api/registrar.js"
   },
   "dependencies": {
-    "mailersend": "^2.2.0",
+    "@sendgrid/mail": "^8.1.0", 
     "pg": "^8.11.3" 
   }
 }
