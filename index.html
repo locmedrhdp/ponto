@@ -44,6 +44,13 @@
             border-bottom: 2px solid var(--primary-color);
             padding-bottom: 10px;
         }
+        
+        /* NOVO ESTILO: Para o logo */
+        .header-logo {
+            max-width: 150px; /* Ajuste o tamanho conforme necessário */
+            height: auto;
+            margin-bottom: 10px;
+        }
 
         .container header h1 {
             font-size: 1.3em;
@@ -85,6 +92,43 @@
             box-shadow: 0 0 5px rgba(204, 0, 0, 0.3);
         }
 
+        /* Estilo específico para a tela de LOGIN */
+        #login-view {
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        #login-view h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        #login-view input {
+            text-align: center;
+        }
+        
+        #login-view button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        #login-view button:hover {
+            background-color: var(--secondary-color);
+        }
+
+
         /* NOVO ESTILO: Blocos de Fases */
         .phase-block {
             border: 2px solid #ddd;
@@ -102,7 +146,7 @@
         }
         
         /* Estilo para campos bloqueados */
-        #phase-gestor[data-locked="true"] input,
+        #phase-gestor[data-locked="true"] input[id$="GestorInput"],
         #phase-gestor[data-locked="true"] select {
             background-color: #eee;
             cursor: not-allowed;
@@ -166,14 +210,16 @@
         }
 
         #btnConcluir {
-            background-color: var(--primary-color); /* Vermelho */
+            background-color: var(--primary-color);
+            /* Vermelho */
         }
         #btnConcluir:hover:not(:disabled) {
             background-color: var(--secondary-color);
         }
         
         #btnAddAjuste {
-            background-color: #5cb85c; /* Verde */
+            background-color: #5cb85c;
+            /* Verde */
             font-size: 1em;
             padding: 8px;
             margin-bottom: 5px;
@@ -184,7 +230,8 @@
         }
 
         #btnOutroColaborador {
-            background-color: #ff9800; /* Laranja */
+            background-color: #ff9800;
+            /* Laranja */
             font-size: 1em;
             padding: 8px;
             margin-top: 0;
@@ -280,7 +327,8 @@
         }
 
         #btnEnviarAjustesFinais {
-            background-color: #4CAF50; /* Verde */
+            background-color: #4CAF50;
+            /* Verde */
             color: white;
         }
         #btnEnviarAjustesFinais:hover {
@@ -312,31 +360,42 @@
 <body>
     <div class="container">
         <header>
-            <h1>LOCMED</h1>
-            <h2>REGISTRO DE AJUSTE DE PONTO</h2>
+            <img src="assets/logo_locmed.png" alt="Logo Locmed" class="header-logo">
+            
+            <h1>REGISTRO</h1>
+            <h2>AJUSTE DE PONTO</h2>
             <p>Preencha os dados do gestor, do colaborador e os ajustes necessários.</p>
         </header>
 
         <div id="feedbackMessage" class="alert-message"></div>
 
-        <div id="form-view">
+        <div id="login-view" style="display: block;">
+            <h3>Acesso Restrito - Login</h3>
+            <div class="form-group">
+                <label for="loginInput">Login (E-mail sem @empresaexemplo.com):</label>
+                <input type="text" id="loginInput" placeholder="nome.sobrenome" required autofocus>
+            </div>
+            <button type="button" onclick="handleLogin()">Acessar Formulário</button>
+            <p style="font-size: 0.8em; color: #999; margin-top: 15px;">Acesso permitido apenas a gestores autorizados.</p>
+        </div>
+        <div id="form-view" style="display: none;">
             <form id="ajustePontoForm">
                 
                 <div class="phase-block" id="phase-gestor" data-locked="false">
                     <h3>Fase 1: Dados do Gestor</h3>
                     <div class="form-group">
                         <label for="nomeGestorInput">Seu Nome (Gestor):</label>
-                        <input type="text" id="nomeGestorInput" name="nomeGestorInput" placeholder="Seu Nome Completo" required>
+                        <input type="text" id="nomeGestorInput" name="nomeGestorInput" placeholder="Seu Nome Completo" required readonly>
                     </div>
                     
                     <div class="row">
                         <div class="form-group">
                             <label for="emailGestor">Seu E-mail (Gestor):</label>
-                            <input type="email" id="emailGestor" name="emailGestor" placeholder="seu.email@locmed.com.br" required>
+                            <input type="email" id="emailGestor" name="emailGestor" placeholder="seu.email@empresaexemplo.com" required>
                         </div>
                         <div class="form-group">
                             <label for="filialSelect">Filial:</label>
-                            <select id="filialSelect" name="filialSelect" required>
+                            <select id="filialSelect" name="filialSelect" required disabled>
                                 <option value="" disabled selected>Selecione a Filial</option>
                                 <option value="Matriz (CE)">Matriz (CE)</option>
                                 <option value="Belo Horizonte (MG)">Belo Horizonte (MG)</option>
@@ -456,6 +515,8 @@
         let allCollectedData = []; 
         
         // --- Referências DOM ---
+        const loginView = document.getElementById('login-view');
+        const loginInput = document.getElementById('loginInput');
         const formView = document.getElementById('form-view');
         const reviewView = document.getElementById('review-view');
         const ajustePontoForm = document.getElementById('ajustePontoForm');
@@ -464,8 +525,67 @@
         const feedbackMessage = document.getElementById('feedbackMessage');
         const phaseGestor = document.getElementById('phase-gestor');
         const btnEnviarAjustesFinais = document.getElementById('btnEnviarAjustesFinais');
+        
+        // Elementos Gestor (preenchidos no login)
+        const nomeGestorInput = document.getElementById('nomeGestorInput');
+        const emailGestorInput = document.getElementById('emailGestor');
+        const filialSelect = document.getElementById('filialSelect');
+        
+        // --- LISTA DE GESTORES AUTORIZADOS PARA LOGIN ---
+        const authorizedUsers = {
+            'pedro.lima': { nome: 'Pedro Henrique de Lima', filial: 'Matriz (CE)' },
+            'mariana.souza': { nome: 'Mariana Fernandes Souza', filial: 'Belo Horizonte (MG)' },
+            'ricardo.neves': { nome: 'Ricardo Almeida Neves', filial: 'Brasília (DF)' },
+            'marcelo.nunes': { nome: 'Marcelo Vieira Nunes', filial: 'Fortaleza (CE)' },
+            'eduardo.dantas': { nome: 'Eduardo Ribeiro Dantas', filial: 'João Pessoa (PB)' },
+            'patricia.mesquita': { nome: 'Patrícia Lima Mesquita', filial: 'Juazeiro do Norte (CE)' },
+            'isabella.melo': { nome: 'Isabella Farias Melo', filial: 'Natal (RN)' },
+            'gustavo.alves': { nome: 'Gustavo Rocha Alves', filial: 'Petrolina (PE)' },
+            'vanessa.bezerra': { nome: 'Vanessa Morais Bezerra', filial: 'Recife (PE)' },
+            'felipe.teixeira': { nome: 'Felipe Assis Teixeira', filial: 'Resende (RJ)' },
+            'bruno.paiva': { nome: 'Bruno Viana Paiva', filial: 'Rio de Janeiro (RJ)' },
+            'sofia.ramos': { nome: 'Sofia Queiroz Ramos', filial: 'Salvador (BA)' },
+            'amanda.coelho': { nome: 'Amanda Dias Coelho', filial: 'São Luís (MA)' },
+            'laura.mota': { nome: 'Laura Ferreira Mota', filial: 'São Paulo (SP)' },
+            'lucas.pinho': { nome: 'Lucas Mendes Pinho', filial: 'Teresina (PI)' },
+        };
+        
+        // --- FUNÇÃO DE LOGIN ---
+        function handleLogin() {
+            const login = loginInput.value.trim().toLowerCase();
+            const user = authorizedUsers[login];
 
+            if (user) {
+                // Preenche Nome e Filial automaticamente
+                nomeGestorInput.value = user.nome;
+                filialSelect.value = user.filial;
+                
+                // Limpa o email para ser preenchido manualmente
+                emailGestorInput.value = '';
 
+                // Esconde login e mostra o formulário
+                loginView.style.display = 'none';
+                formView.style.display = 'block';
+                document.getElementById('nomeColaboradorInput').focus();
+                
+                // Feedback
+                feedbackMessage.className = 'alert-message alert-success';
+                feedbackMessage.textContent = `✅ Acesso liberado! Logado como ${user.nome} (${user.filial}). Por favor, informe seu e-mail.`;
+                feedbackMessage.style.display = 'block';
+                
+                // Bloqueia campos preenchidos e permite a edição do email
+                lockGestorFields();
+                emailGestorInput.focus();
+
+            } else {
+                feedbackMessage.className = 'alert-message alert-error';
+                feedbackMessage.textContent = '❌ Login inválido ou não autorizado.';
+                feedbackMessage.style.display = 'block';
+                loginInput.focus();
+                loginInput.value = ''; // Limpa o campo
+            }
+        }
+        
         // --- Funções de Navegação e Estado ---
 
         function switchToFormView() {
@@ -474,21 +594,20 @@
             updateAddButton(); 
             // Reabilita edição do Gestor se a lista estiver vazia
             if (allCollectedData.length === 0) {
-                unlockGestorFields();
+                // Após o login, os campos do gestor não devem ser desbloqueados, apenas revalidados
+                lockGestorFields(); 
             }
         }
 
         // --- FUNÇÃO PRINCIPAL DE TRANSIÇÃO PARA REVISÃO ---
         function switchToReviewView(e) {
             e.preventDefault();
-
             if (!ajustePontoForm.checkValidity()) {
                 ajustePontoForm.reportValidity();
-                return; 
+                return;
             }
             
             const currentData = collectCurrentCollaboratorData();
-            
             if (currentData) {
                 // Adiciona o último bloco de dados
                 allCollectedData.push(currentData);
@@ -509,20 +628,12 @@
 
         // --- Funções de Gestão de Dados do Gestor (Fase 1) ---
         function lockGestorFields() {
-            document.getElementById('nomeGestorInput').readOnly = true;
-            document.getElementById('emailGestor').readOnly = true;
-            document.getElementById('filialSelect').disabled = true;
+            // Nome e Filial preenchidos no login são bloqueados
+            nomeGestorInput.readOnly = true;
+            filialSelect.disabled = true;
+            // O email é mantido editável (readOnly=false, disabled=false por padrão)
             phaseGestor.setAttribute('data-locked', 'true');
         }
-
-        function unlockGestorFields() {
-            document.getElementById('nomeGestorInput').readOnly = false;
-            document.getElementById('emailGestor').readOnly = false;
-            document.getElementById('filialSelect').disabled = false;
-            phaseGestor.setAttribute('data-locked', 'false');
-        }
-
-        // --- Funções de Ação no Formulário (Fase 2 e 3) ---
 
         function collectCurrentCollaboratorData() {
             const collaboratorName = document.getElementById('nomeColaboradorInput').value;
@@ -537,7 +648,6 @@
                 const dataAjuste = document.getElementById(`dataAjuste${i}Input`).value;
                 const horarioAjustado = document.getElementById(`horarioAjustado${i}`).value;
                 const motivoAjuste = document.getElementById(`motivoAjuste${i}`).value;
-                
                 if (block && block.style.display !== 'none' && dataAjuste && horarioAjustado && motivoAjuste) {
                     currentAjustes.push({
                         data: dataAjuste,
@@ -548,7 +658,7 @@
             }
 
             if (currentAjustes.length === 0) {
-                return null; 
+                return null;
             }
 
             return {
@@ -559,12 +669,10 @@
 
         function resetCollaboratorFields() {
             document.getElementById('nomeColaboradorInput').value = "";
-            
             for (let i = 1; i <= NUM_MAX_AJUSTES; i++) {
                 const block = document.getElementById(`ajuste-${i}`);
                 const inputs = block.querySelectorAll('input, textarea');
                 inputs.forEach(input => input.value = '');
-                
                 if (i > 1) {
                     block.style.display = 'none';
                     inputs.forEach(input => input.removeAttribute('required'));
@@ -576,14 +684,15 @@
         }
 
         function startNewEmployee() {
-            if (!document.getElementById('nomeGestorInput').value || !document.getElementById('emailGestor').value || !document.getElementById('filialSelect').value) {
-                alert("Por favor, preencha as informações do Gestor (Fase 1) primeiro.");
-                document.getElementById('nomeGestorInput').focus();
+            // A verificação do gestor agora inclui o campo de email, que deve ser preenchido
+            if (!nomeGestorInput.value || !emailGestorInput.value || !filialSelect.value) {
+                alert("Erro de autenticação. Por favor, faça o login e preencha o campo de E-mail antes de continuar.");
+                // Se o email estiver vazio, focamos nele
+                if (!emailGestorInput.value) emailGestorInput.focus();
                 return;
             }
 
             const currentData = collectCurrentCollaboratorData();
-            
             if (currentData === null) {
                 alert("Por favor, preencha o Nome do Colaborador e pelo menos o Ajuste #1 antes de adicionar outro colaborador.");
                 document.getElementById('nomeColaboradorInput').focus();
@@ -593,9 +702,9 @@
             allCollectedData.push(currentData);
             lockGestorFields();
             resetCollaboratorFields();
-
             feedbackMessage.className = 'alert-message alert-success';
-            feedbackMessage.textContent = `✅ Ajustes para ${currentData.nomeColaborador} salvos temporariamente. Total: ${allCollectedData.length} colaborador(es) registrados. Preencha os dados do próximo.`;
+            feedbackMessage.textContent = `✅ Ajustes para ${currentData.nomeColaborador} salvos temporariamente. Total: ${allCollectedData.length} colaborador(es) registrados.
+            Preencha os dados do próximo.`;
             feedbackMessage.style.display = 'block';
             document.getElementById('nomeColaboradorInput').focus(); 
         }
@@ -651,9 +760,9 @@
         // --- Funções de Revisão e EDIÇÃO INLINE ---
         
         function renderReview() {
-            const gestorName = document.getElementById('nomeGestorInput').value;
-            const gestorEmail = document.getElementById('emailGestor').value;
-            const filial = document.getElementById('filialSelect').value;
+            const gestorName = nomeGestorInput.value;
+            const gestorEmail = emailGestorInput.value;
+            const filial = filialSelect.value;
 
             let html = `
                 <h3 class="review-header">Dados do Gestor e Filial:</h3>
@@ -664,7 +773,6 @@
                 </div>
                 <h3 class="review-header" style="text-align: left;">Resumo dos Ajustes Registrados (${allCollectedData.length} Colaborador(es)):</h3>
             `;
-
             if (allCollectedData.length === 0) {
                 html += '<p>Nenhum ajuste encontrado para revisão.</p>';
                 btnEnviarAjustesFinais.disabled = true;
@@ -675,6 +783,7 @@
                 allCollectedData.forEach((collaboratorData, collabIndex) => {
                     html += `
                         <div class="review-ajuste" id="collab-review-${collabIndex}">
+                            
                             <div class="review-display-mode" id="display-mode-${collabIndex}">
                                 <h4>Colaborador: 
                                     <span data-field="nome">${collaboratorData.nomeColaborador}</span>
@@ -685,10 +794,12 @@
                     collaboratorData.ajustes.forEach((ajuste, i) => {
                         html += `
                             <div style="border-top: 1px dashed #eee; padding-top: 10px; margin-top: 10px;" data-ajuste-index="${i}">
+                                
                                 <strong style="color: var(--primary-color);">AJUSTE ${i + 1}</strong>
                                 <p style="margin: 5px 0;">Data: 
                                     <span data-field="dataAjuste${i}">
-                                        ${ajuste.data ? new Date(ajuste.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}
+                                        ${ajuste.data ?
+                                        new Date(ajuste.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}
                                     </span>
                                 </p>
                                 <p style="margin: 5px 0;">Horário Ajustado: 
@@ -696,6 +807,7 @@
                                         ${ajuste.horario || 'N/A'}
                                     </span>
                                 </p>
+                                
                                 <p style="margin: 5px 0;">Motivo: 
                                     <span data-field="motivoAjuste${i}">
                                         ${ajuste.motivo.replace(/\n/g, '<br>')}
@@ -709,7 +821,6 @@
 
                     // MODO DE EDIÇÃO (Inicialmente invisível)
                     html += buildEditFormHTML(collaboratorData, collabIndex);
-
                     html += `</div>`; // Fecha review-ajuste
                 });
             }
@@ -724,7 +835,6 @@
                 <input type="text" id="edit-nome-${index}" value="${data.nomeColaborador}" required style="width: 100%;">
                 <hr style="border: 1px dashed #ddd; margin: 15px 0;">
             `;
-
             data.ajustes.forEach((ajuste, i) => {
                 editHtml += `
                     <div style="margin-bottom: 20px;">
@@ -780,7 +890,6 @@
             }
 
             let isValid = true;
-            
             for (let i = 0; i < allCollectedData[index].ajustes.length; i++) {
                 const data = document.getElementById(`edit-data-${index}-${i}`).value;
                 const horario = document.getElementById(`edit-horario-${index}-${i}`).value;
@@ -796,19 +905,16 @@
             }
             
             if (!isValid) return;
-
             // 1. Atualiza o objeto global
             allCollectedData[index].nomeColaborador = newCollaboratorName;
             allCollectedData[index].ajustes = newAjustes;
 
             // 2. Re-renderiza a tela de revisão
             renderReview();
-            
             // 3. Feedback
             feedbackMessage.className = 'alert-message alert-success';
             feedbackMessage.textContent = `✅ Correções para ${newCollaboratorName} salvas com sucesso!`;
             feedbackMessage.style.display = 'block';
-            
             // 4. Sai do modo de edição
             toggleEditMode(index);
         }
@@ -819,10 +925,11 @@
             btnEnviarAjustesFinais.disabled = true;
             btnEnviarAjustesFinais.textContent = 'Enviando...';
 
+            // ATENÇÃO: Os dados do Gestor (Nome, Email, Filial) são lidos do formulário
             const dataForBackend = {
-                nomeGestor: document.getElementById('nomeGestorInput').value,
-                emailGestor: document.getElementById('emailGestor').value,
-                filial: document.getElementById('filialSelect').value,
+                nomeGestor: nomeGestorInput.value,
+                emailGestor: emailGestorInput.value, // Lendo o e-mail digitado manualmente
+                filial: filialSelect.value,
                 ajustesMultiColaborador: allCollectedData 
             };
             
@@ -835,19 +942,22 @@
                     },
                     body: JSON.stringify(dataForBackend),
                 });
-
                 const result = await response.json();
 
                 if (response.ok) {
                     feedbackMessage.className = 'alert-message alert-success';
                     feedbackMessage.textContent = `✅ Ajustes para ${allCollectedData.length} colaborador(es) enviados com sucesso!`;
-                    
                     // Limpa TUDO após o envio bem-sucedido
                     allCollectedData = [];
                     ajustePontoForm.reset();
                     resetCollaboratorFields();
-                    unlockGestorFields(); 
-                    switchToFormView(); 
+                    
+                    // Volta para a tela de Login
+                    loginView.style.display = 'block';
+                    formView.style.display = 'none';
+                    loginInput.value = '';
+                    loginInput.focus();
+                    
                 } else {
                     feedbackMessage.className = 'alert-message alert-error';
                     feedbackMessage.textContent = `❌ Erro no envio (${response.status}): ${result.message || 'Erro de comunicação.'}`;
@@ -859,7 +969,6 @@
             }
 
             feedbackMessage.style.display = 'block';
-            
             // Atualiza o botão, o número de colaboradores será 0 se o envio foi bem-sucedido
             const numColaboradoresRestantes = allCollectedData.length;
             btnEnviarAjustesFinais.disabled = false;
@@ -870,8 +979,15 @@
         // --- Inicialização ---
         document.addEventListener('DOMContentLoaded', () => {
             ajustePontoForm.addEventListener('submit', switchToReviewView);
+            // Permite submeter o login ao pressionar ENTER
+            loginInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
             updateAddButton();
-            document.getElementById('nomeGestorInput').focus();
+            // A tela de login é a primeira a ser exibida
+            loginInput.focus();
         });
     </script>
 </body>
