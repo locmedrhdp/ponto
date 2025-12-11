@@ -7,8 +7,7 @@
     "start": "node api/registrar.js"
   },
   "dependencies": {
-    "googleapis": "^128.0.0",
     "mailersend": "^2.2.0",
-    "google-auth-library": "^9.4.1" 
+    "pg": "^8.11.3" 
   }
 }
