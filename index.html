@@ -391,7 +391,7 @@
         <div id="login-view" style="display: block;">
             <h3>Acesso Restrito - Login</h3>
             <div class="form-group">
-                <label for="loginInput">Login (E-mail sem @empresaexemplo.com):</label>
+                <label for="loginInput">Login:</label>
                 <input type="text" id="loginInput" placeholder="nome.sobrenome" required autofocus>
             </div>
             <button type="button" onclick="handleLogin()">Acessar Formulário</button>
@@ -407,7 +407,7 @@
             <form id="ajustePontoForm">
                 
                 <div class="phase-block" id="phase-gestor" data-locked="false">
-                    <h3>Fase 1: Dados do Gestor</h3>
+                    <h3>Dados do Gestor</h3>
                     <div class="form-group">
                         <label for="nomeGestorInput">Seu Nome (Gestor):</label>
                         <input type="text" id="nomeGestorInput" name="nomeGestorInput" placeholder="Seu Nome Completo" required readonly>
@@ -443,9 +443,9 @@
                 </div>
 
                 <div class="phase-block" id="phase-colaborador">
-                    <h3>Fase 2: Colaborador</h3>
+                    <h3>Informações do Colaborador</h3>
                     <div class="form-group">
-                        <label for="nomeColaboradorInput">Nome do Colaborador:</label>
+                        <label for="nomeColaboradorInput">Nome Completo:</label>
                         <input type="text" id="nomeColaboradorInput" name="nomeColaboradorInput" placeholder="Nome Completo" required>
                     </div>
                 </div>
@@ -611,7 +611,7 @@
                 
                 // Feedback
                 feedbackMessage.className = 'alert-message alert-success';
-                feedbackMessage.textContent = `✅ Acesso liberado! Logado como ${user.nome} (${user.filial}). Por favor, informe seu e-mail.`;
+                feedbackMessage.textContent = `✅ Acesso liberado! Logado como ${user.nome}. Por favor, informe seu e-mail.`;
                 feedbackMessage.style.display = 'block';
                 
                 // Bloqueia campos preenchidos e permite a edição do email
@@ -835,14 +835,14 @@
                     <p><strong>E-mail:</strong> ${gestorEmail}</p>
                     <p><strong>Filial:</strong> ${filial}</p>
                 </div>
-                <h3 class="review-header" style="text-align: left;">Resumo dos Ajustes Registrados (${allCollectedData.length} Colaborador(es)):</h3>
+                <h3 class="review-header" style="text-align: left;">Resumo dos Ajustes Registrados - ${allCollectedData.length} Colaborador(es):</h3>
             `;
             if (allCollectedData.length === 0) {
                 html += '<p>Nenhum ajuste encontrado para revisão.</p>';
                 btnEnviarAjustesFinais.disabled = true;
             } else {
                 btnEnviarAjustesFinais.disabled = false;
-                btnEnviarAjustesFinais.textContent = `Enviar Ajustes (${allCollectedData.length} Colaborador(es))`
+                btnEnviarAjustesFinais.textContent = `Enviar Ajustes - ${allCollectedData.length} Colaborador(es)`
 
                 allCollectedData.forEach((collaboratorData, collabIndex) => {
                     html += `
@@ -1048,3 +1048,4 @@
     </script>
 </body>
 </html>
+
