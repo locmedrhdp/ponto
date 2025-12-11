@@ -4,7 +4,7 @@ const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 // --- CONFIGURAÇÃO: IDs e Nomes Fixos ---
 const PLANILHA_ID = '1gScRMCuIKiaD49zKQ0CmGAkxyV8CB1hO6PoDMta7WKs'; 
 const PLANILHA_ABA = 'REGISTRO';
-const RH_EMAIL_RECIPIENT = 'gestaodepessoas@locmed.com.br'; // Email do RH que recebe a notificação
+const RH_EMAIL_RECIPIENT = 'abraao.campos@gmail.com'; // Email do RH que recebe a notificação
 
 // --- Variáveis de Ambiente (Lidas da Vercel) ---
 const MAILERSEND_API_TOKEN = process.env.MAILERSEND_API_TOKEN;
@@ -177,3 +177,4 @@ module.exports = async (req, res) => {
         res.status(500).json({ success: false, message: `Erro no processamento do Backend. Detalhe: ${e.message}` });
     }
 };
+
