@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOCMED | REGISTRO DE AJUSTE DE PONTO</title>
+    <style>
+        /* Estilos CSS Baseados no código Apps Script */
+        :root {
+            --primary-color: #cc0000;
+            --secondary-color: #990000;
+            --background-color: #f4f4f4;
+            --container-bg: #fff;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --border-color: #ccc;
+            --input-padding: 10px;
+            --border-radius: 6px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--background-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            max-width: 650px;
+            width: 100%;
+        }
+
+        .container header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .container header h1 {
+            font-size: 1.3em;
+            margin: 0;
+        }
+
+        .container header h2 {
+            color: var(--secondary-color);
+            margin: 5px 0 5px 0;
+            font-size: 2.2em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: var(--input-padding);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(204, 0, 0, 0.3);
+        }
+
+        /* NOVO ESTILO: Blocos de Fases */
+        .phase-block {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: var(--border-radius);
+            background-color: #fcfcfc;
+        }
+        .phase-block h3 {
+            color: #333;
+            margin-top: 0;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #eee;
+            font-size: 1.2em;
+        }
+        
+        /* Estilo para campos bloqueados */
+        #phase-gestor[data-locked="true"] input,
+        #phase-gestor[data-locked="true"] select {
+            background-color: #eee;
+            cursor: not-allowed;
+        }
+        
+        .ajuste-block {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: var(--border-radius);
+            background-color: #f9f9f9;
+        }
+
+        .ajuste-header {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ajuste-header button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        
+        .ajuste-header button:hover {
+            background-color: #d32f2f;
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .row > div {
+            flex: 1;
+        }
+
+        /* Estilo para os botões principais de ação */
+        .action-button {
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        #btnConcluir {
+            background-color: var(--primary-color); /* Vermelho */
+        }
+        #btnConcluir:hover:not(:disabled) {
+            background-color: var(--secondary-color);
+        }
+        
+        #btnAddAjuste {
+            background-color: #5cb85c; /* Verde */
+            font-size: 1em;
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+        
+        #btnAddAjuste:hover {
+            background-color: #4cae4c;
+        }
+
+        #btnOutroColaborador {
+            background-color: #ff9800; /* Laranja */
+            font-size: 1em;
+            padding: 8px;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        #btnOutroColaborador:hover {
+            background-color: #e68900;
+        }
+
+        /* Estilos para a Review View */
+        .review-header {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .review-info {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+        .review-info p {
+            margin: 5px 0;
+        }
+        .review-info strong {
+            color: #333;
+        }
+
+        .review-ajuste {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            background-color: #fff;
+            position: relative;
+            border-left: 5px solid #cc0000;
+        }
+        
+        .review-ajuste h4 {
+            color: #333;
+            margin-top: 0;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .edit-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #1e88e5; 
+            transition: color 0.2s;
+            font-style: normal;
+        }
+        .edit-icon:hover {
+            color: #0d47a1;
+        }
+        
+        /* Estilos para o formulário de edição INLINE */
+        .review-edit-form {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            background-color: #f9f9f9;
+        }
+
+        .review-edit-form input[type="text"],
+        .review-edit-form input[type="date"],
+        .review-edit-form input[type="time"],
+        .review-edit-form textarea {
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        /* Botões de Ação na Revisão */
+        .review-actions {
+            margin-top: 20px;
+        }
+        .review-actions button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            width: 100%;
+        }
+
+        #btnEnviarAjustesFinais {
+            background-color: #4CAF50; /* Verde */
+            color: white;
+        }
+        #btnEnviarAjustesFinais:hover {
+            background-color: #388E3C;
+        }
+
+        .alert-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            display: none;
+            text-align: center;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LOCMED</h1>
+            <h2>REGISTRO DE AJUSTE DE PONTO</h2>
+            <p>Preencha os dados do gestor, do colaborador e os ajustes necessários.</p>
+        </header>
+
+        <div id="feedbackMessage" class="alert-message"></div>
+
+        <div id="form-view">
+            <form id="ajustePontoForm">
+                
+                <div class="phase-block" id="phase-gestor" data-locked="false">
+                    <h3>Fase 1: Dados do Gestor</h3>
+                    <div class="form-group">
+                        <label for="nomeGestorInput">Seu Nome (Gestor):</label>
+                        <input type="text" id="nomeGestorInput" name="nomeGestorInput" placeholder="Seu Nome Completo" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="emailGestor">Seu E-mail (Gestor):</label>
+                            <input type="email" id="emailGestor" name="emailGestor" placeholder="seu.email@locmed.com.br" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="filialSelect">Filial:</label>
+                            <select id="filialSelect" name="filialSelect" required>
+                                <option value="" disabled selected>Selecione a Filial</option>
+                                <option value="Matriz (CE)">Matriz (CE)</option>
+                                <option value="Belo Horizonte (MG)">Belo Horizonte (MG)</option>
+                                <option value="Brasília (DF)">Brasília (DF)</option>
+                                <option value="Fortaleza (CE)">Fortaleza (CE)</option>
+                                <option value="João Pessoa (PB)">João Pessoa (PB)</option>
+                                <option value="Juazeiro do Norte (CE)">Juazeiro do Norte (CE)</option>
+                                <option value="Natal (RN)">Natal (RN)</option>
+                                <option value="Petrolina (PE)">Petrolina (PE)</option>
+                                <option value="Recife (PE)">Recife (PE)</option>
+                                <option value="Resende (RJ)">Resende (RJ)</option>
+                                <option value="Rio de Janeiro (RJ)">Rio de Janeiro (RJ)</option>
+                                <option value="Salvador (BA)">Salvador (BA)</option>
+                                <option value="São Luís (MA)">São Luís (MA)</option>
+                                <option value="São Paulo (SP)">São Paulo (SP)</option>
+                                <option value="Teresina (PI)">Teresina (PI)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="phase-block" id="phase-colaborador">
+                    <h3>Fase 2: Colaborador</h3>
+                    <div class="form-group">
+                        <label for="nomeColaboradorInput">Nome do Colaborador:</label>
+                        <input type="text" id="nomeColaboradorInput" name="nomeColaboradorInput" placeholder="Nome Completo" required>
+                    </div>
+                </div>
+                
+                <div class="phase-block" id="phase-ajustes">
+                    <h3>Fase 3: Detalhes do Ajuste</h3>
+
+                    <div id="ajustesContainer">
+                        <div class="ajuste-block" data-ajuste-index="1" id="ajuste-1">
+                            <div class="ajuste-header">Ajuste de Ponto #1</div>
+                            <div class="row">
+                                <div>
+                                    <label for="dataAjuste1Input">Data do Ajuste:</label>
+                                    <input type="date" id="dataAjuste1Input" name="dataAjuste1Input" required>
+                                </div>
+                                <div>
+                                    <label for="horarioAjustado1">Horário Ajustado:</label>
+                                    <input type="time" id="horarioAjustado1" name="horarioAjustado1" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="motivoAjuste1">Motivo do Ajuste (Obrigatório):</label>
+                                <textarea id="motivoAjuste1" name="motivoAjuste1" rows="3" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="ajuste-block" data-ajuste-index="2" id="ajuste-2" style="display: none;">
+                            <div class="ajuste-header">
+                                Ajuste de Ponto #2 
+                                <button type="button" onclick="toggleAjuste(2)">Remover</button>
+                            </div>
+                            <div class="row">
+                                <div>
+                                    <label for="dataAjuste2Input">Data do Ajuste:</label>
+                                    <input type="date" id="dataAjuste2Input" name="dataAjuste2Input">
+                                </div>
+                                <div>
+                                    <label for="horarioAjustado2">Horário Ajustado:</label>
+                                    <input type="time" id="horarioAjustado2" name="horarioAjustado2">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="motivoAjuste2">Motivo do Ajuste:</label>
+                                <textarea id="motivoAjuste2" name="motivoAjuste2" rows="3"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="ajuste-block" data-ajuste-index="3" id="ajuste-3" style="display: none;">
+                            <div class="ajuste-header">
+                                Ajuste de Ponto #3 
+                                <button type="button" onclick="toggleAjuste(3)">Remover</button>
+                            </div>
+                            <div class="row">
+                                <div>
+                                    <label for="dataAjuste3Input">Data do Ajuste:</label>
+                                    <input type="date" id="dataAjuste3Input" name="dataAjuste3Input">
+                                </div>
+                                <div>
+                                    <label for="horarioAjustado3">Horário Ajustado:</label>
+                                    <input type="time" id="horarioAjustado3" name="horarioAjustado3">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="motivoAjuste3">Motivo do Ajuste:</label>
+                                <textarea id="motivoAjuste3" name="motivoAjuste3" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" id="btnAddAjuste" onclick="addAjuste()" class="action-button" style="background-color: #5cb85c;">+ Adicionar Mais um Ajuste (Máximo 3)</button>
+                <button type="button" id="btnOutroColaborador" onclick="startNewEmployee()" class="action-button">🔁 Salvar e Adicionar Outro Colaborador</button>
+                <button type="submit" id="btnConcluir" class="action-button">Concluir e Ir para Revisão</button>
+            </form>
+        </div>
+
+        <div id="review-view" style="display: none;">
+            <h3 class="review-header" style="text-align: center;">Confira as Informações Preenchidas</h3>
+            
+            <div id="review-data">
+                </div>
+
+            <div class="review-actions">
+                <button type="button" id="btnEnviarAjustesFinais" onclick="sendFinalData()">Enviar Ajustes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Variáveis de Estado Global ---
+        const NUM_MAX_AJUSTES = 3;
+        let allCollectedData = []; 
+        
+        // --- Referências DOM ---
+        const formView = document.getElementById('form-view');
+        const reviewView = document.getElementById('review-view');
+        const ajustePontoForm = document.getElementById('ajustePontoForm');
+        const btnAddAjuste = document.getElementById('btnAddAjuste');
+        const reviewDataContainer = document.getElementById('review-data');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const phaseGestor = document.getElementById('phase-gestor');
+        const btnEnviarAjustesFinais = document.getElementById('btnEnviarAjustesFinais');
+
+
+        // --- Funções de Navegação e Estado ---
+
+        function switchToFormView() {
+            reviewView.style.display = 'none';
+            formView.style.display = 'block';
+            updateAddButton(); 
+            // Reabilita edição do Gestor se a lista estiver vazia
+            if (allCollectedData.length === 0) {
+                unlockGestorFields();
+            }
+        }
+
+        // --- FUNÇÃO PRINCIPAL DE TRANSIÇÃO PARA REVISÃO ---
+        function switchToReviewView(e) {
+            e.preventDefault();
+
+            if (!ajustePontoForm.checkValidity()) {
+                ajustePontoForm.reportValidity();
+                return; 
+            }
+            
+            const currentData = collectCurrentCollaboratorData();
+            
+            if (currentData) {
+                // Adiciona o último bloco de dados
+                allCollectedData.push(currentData);
+                // Limpa o formulário para evitar duplicação (se o usuário voltar)
+                resetCollaboratorFields();
+            } else if (allCollectedData.length === 0) {
+                alert("Por favor, preencha o Nome do Colaborador e pelo menos o Ajuste #1 antes de concluir.");
+                return;
+            }
+
+            lockGestorFields();
+            renderReview();
+
+            formView.style.display = 'none';
+            reviewView.style.display = 'block';
+            feedbackMessage.style.display = 'none';
+        }
+
+        // --- Funções de Gestão de Dados do Gestor (Fase 1) ---
+        function lockGestorFields() {
+            document.getElementById('nomeGestorInput').readOnly = true;
+            document.getElementById('emailGestor').readOnly = true;
+            document.getElementById('filialSelect').disabled = true;
+            phaseGestor.setAttribute('data-locked', 'true');
+        }
+
+        function unlockGestorFields() {
+            document.getElementById('nomeGestorInput').readOnly = false;
+            document.getElementById('emailGestor').readOnly = false;
+            document.getElementById('filialSelect').disabled = false;
+            phaseGestor.setAttribute('data-locked', 'false');
+        }
+
+        // --- Funções de Ação no Formulário (Fase 2 e 3) ---
+
+        function collectCurrentCollaboratorData() {
+            const collaboratorName = document.getElementById('nomeColaboradorInput').value;
+            const currentAjustes = [];
+
+            if (collaboratorName.trim() === "") {
+                return null;
+            }
+            
+            for (let i = 1; i <= NUM_MAX_AJUSTES; i++) {
+                const block = document.getElementById(`ajuste-${i}`);
+                const dataAjuste = document.getElementById(`dataAjuste${i}Input`).value;
+                const horarioAjustado = document.getElementById(`horarioAjustado${i}`).value;
+                const motivoAjuste = document.getElementById(`motivoAjuste${i}`).value;
+                
+                if (block && block.style.display !== 'none' && dataAjuste && horarioAjustado && motivoAjuste) {
+                    currentAjustes.push({
+                        data: dataAjuste,
+                        horario: horarioAjustado,
+                        motivo: motivoAjuste
+                    });
+                }
+            }
+
+            if (currentAjustes.length === 0) {
+                return null; 
+            }
+
+            return {
+                nomeColaborador: collaboratorName,
+                ajustes: currentAjustes
+            };
+        }
+
+        function resetCollaboratorFields() {
+            document.getElementById('nomeColaboradorInput').value = "";
+            
+            for (let i = 1; i <= NUM_MAX_AJUSTES; i++) {
+                const block = document.getElementById(`ajuste-${i}`);
+                const inputs = block.querySelectorAll('input, textarea');
+                inputs.forEach(input => input.value = '');
+                
+                if (i > 1) {
+                    block.style.display = 'none';
+                    inputs.forEach(input => input.removeAttribute('required'));
+                } else {
+                    inputs.forEach(input => input.setAttribute('required', 'required'));
+                }
+            }
+            updateAddButton();
+        }
+
+        function startNewEmployee() {
+            if (!document.getElementById('nomeGestorInput').value || !document.getElementById('emailGestor').value || !document.getElementById('filialSelect').value) {
+                alert("Por favor, preencha as informações do Gestor (Fase 1) primeiro.");
+                document.getElementById('nomeGestorInput').focus();
+                return;
+            }
+
+            const currentData = collectCurrentCollaboratorData();
+            
+            if (currentData === null) {
+                alert("Por favor, preencha o Nome do Colaborador e pelo menos o Ajuste #1 antes de adicionar outro colaborador.");
+                document.getElementById('nomeColaboradorInput').focus();
+                return;
+            }
+
+            allCollectedData.push(currentData);
+            lockGestorFields();
+            resetCollaboratorFields();
+
+            feedbackMessage.className = 'alert-message alert-success';
+            feedbackMessage.textContent = `✅ Ajustes para ${currentData.nomeColaborador} salvos temporariamente. Total: ${allCollectedData.length} colaborador(es) registrados. Preencha os dados do próximo.`;
+            feedbackMessage.style.display = 'block';
+            document.getElementById('nomeColaboradorInput').focus(); 
+        }
+        
+        function updateAddButton() {
+            let nextAjusteIndex = -1;
+            if (document.getElementById('ajuste-2').style.display === 'none') {
+                nextAjusteIndex = 2;
+            } else if (document.getElementById('ajuste-3').style.display === 'none') {
+                nextAjusteIndex = 3;
+            }
+
+            if (nextAjusteIndex === -1) {
+                btnAddAjuste.disabled = true;
+                btnAddAjuste.textContent = 'Máximo de 3 Ajustes Adicionados';
+            } else {
+                btnAddAjuste.disabled = false;
+                btnAddAjuste.textContent = '+ Adicionar Mais um Ajuste (Máximo 3)';
+            }
+        }
+
+        function addAjuste() {
+            let nextAjusteIndex = -1;
+            if (document.getElementById('ajuste-2').style.display === 'none') {
+                nextAjusteIndex = 2;
+            } else if (document.getElementById('ajuste-3').style.display === 'none') {
+                nextAjusteIndex = 3;
+            }
+
+            if (nextAjusteIndex !== -1) {
+                const block = document.getElementById(`ajuste-${nextAjusteIndex}`);
+                block.style.display = 'block';
+                block.querySelectorAll('input, textarea').forEach(input => {
+                    input.setAttribute('required', 'required');
+                });
+            }
+            updateAddButton();
+        }
+
+        function toggleAjuste(index) {
+            const ajusteBlock = document.getElementById(`ajuste-${index}`);
+            if (ajusteBlock) {
+                ajusteBlock.style.display = 'none';
+                const inputs = ajusteBlock.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.value = '';
+                    input.removeAttribute('required'); 
+                });
+            }
+            updateAddButton();
+        }
+
+        // --- Funções de Revisão e EDIÇÃO INLINE ---
+        
+        function renderReview() {
+            const gestorName = document.getElementById('nomeGestorInput').value;
+            const gestorEmail = document.getElementById('emailGestor').value;
+            const filial = document.getElementById('filialSelect').value;
+
+            let html = `
+                <h3 class="review-header">Dados do Gestor e Filial:</h3>
+                <div class="review-info">
+                    <p><strong>Gestor:</strong> ${gestorName}</p>
+                    <p><strong>E-mail:</strong> ${gestorEmail}</p>
+                    <p><strong>Filial:</strong> ${filial}</p>
+                </div>
+                <h3 class="review-header" style="text-align: left;">Resumo dos Ajustes Registrados (${allCollectedData.length} Colaborador(es)):</h3>
+            `;
+
+            if (allCollectedData.length === 0) {
+                html += '<p>Nenhum ajuste encontrado para revisão.</p>';
+                btnEnviarAjustesFinais.disabled = true;
+            } else {
+                btnEnviarAjustesFinais.disabled = false;
+                btnEnviarAjustesFinais.textContent = `Enviar Ajustes (${allCollectedData.length} Colaborador(es))`
+
+                allCollectedData.forEach((collaboratorData, collabIndex) => {
+                    html += `
+                        <div class="review-ajuste" id="collab-review-${collabIndex}">
+                            <div class="review-display-mode" id="display-mode-${collabIndex}">
+                                <h4>Colaborador: 
+                                    <span data-field="nome">${collaboratorData.nomeColaborador}</span>
+                                </h4>
+                                <span class="edit-icon" onclick="toggleEditMode(${collabIndex})" title="Corrigir dados deste colaborador">&#9999;&#xFE0E;</span>
+                    `;
+                    
+                    collaboratorData.ajustes.forEach((ajuste, i) => {
+                        html += `
+                            <div style="border-top: 1px dashed #eee; padding-top: 10px; margin-top: 10px;" data-ajuste-index="${i}">
+                                <strong style="color: var(--primary-color);">AJUSTE ${i + 1}</strong>
+                                <p style="margin: 5px 0;">Data: 
+                                    <span data-field="dataAjuste${i}">
+                                        ${ajuste.data ? new Date(ajuste.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}
+                                    </span>
+                                </p>
+                                <p style="margin: 5px 0;">Horário Ajustado: 
+                                    <span data-field="horarioAjustado${i}">
+                                        ${ajuste.horario || 'N/A'}
+                                    </span>
+                                </p>
+                                <p style="margin: 5px 0;">Motivo: 
+                                    <span data-field="motivoAjuste${i}">
+                                        ${ajuste.motivo.replace(/\n/g, '<br>')}
+                                    </span>
+                                </p>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`; // Fecha review-display-mode
+
+                    // MODO DE EDIÇÃO (Inicialmente invisível)
+                    html += buildEditFormHTML(collaboratorData, collabIndex);
+
+                    html += `</div>`; // Fecha review-ajuste
+                });
+            }
+            reviewDataContainer.innerHTML = html;
+        }
+
+        function buildEditFormHTML(data, index) {
+            let editHtml = `<div class="review-edit-form" id="edit-mode-${index}" style="display:none;">`;
+            editHtml += `
+                <h4 style="color: var(--primary-color);">Editando: ${data.nomeColaborador}</h4>
+                <label style="font-weight: bold;">Novo Nome do Colaborador:</label>
+                <input type="text" id="edit-nome-${index}" value="${data.nomeColaborador}" required style="width: 100%;">
+                <hr style="border: 1px dashed #ddd; margin: 15px 0;">
+            `;
+
+            data.ajustes.forEach((ajuste, i) => {
+                editHtml += `
+                    <div style="margin-bottom: 20px;">
+                        <strong style="color: var(--secondary-color);">AJUSTE ${i + 1}</strong>
+                        <div class="row">
+                            <div>
+                                <label>Data:</label>
+                                <input type="date" id="edit-data-${index}-${i}" value="${ajuste.data}" required>
+                            </div>
+                            <div>
+                                <label>Horário Ajustado:</label>
+                                <input type="time" id="edit-horario-${index}-${i}" value="${ajuste.horario}" required>
+                            </div>
+                        </div>
+                        <label>Motivo:</label>
+                        <textarea id="edit-motivo-${index}-${i}" rows="3" required>${ajuste.motivo}</textarea>
+                    </div>
+                `;
+            });
+            
+            editHtml += `
+                <button type="button" onclick="saveReviewEdit(${index})" class="action-button" style="background-color: #1e88e5; padding: 8px;">Salvar Correção</button>
+                <button type="button" onclick="toggleEditMode(${index})" class="action-button" style="background-color: #6c757d; padding: 8px; margin-top: 5px;">Cancelar Edição</button>
+            `;
+            editHtml += `</div>`;
+            return editHtml;
+        }
+
+        function toggleEditMode(index) {
+            const displayMode = document.getElementById(`display-mode-${index}`);
+            const editMode = document.getElementById(`edit-mode-${index}`);
+
+            if (displayMode.style.display !== 'none') {
+                // Entra no modo de edição
+                displayMode.style.display = 'none';
+                editMode.style.display = 'block';
+                document.getElementById(`edit-nome-${index}`).focus();
+            } else {
+                // Sai do modo de edição
+                displayMode.style.display = 'block';
+                editMode.style.display = 'none';
+            }
+        }
+
+        function saveReviewEdit(index) {
+            const newCollaboratorName = document.getElementById(`edit-nome-${index}`).value;
+            const newAjustes = [];
+            
+            // Validação simples
+            if (newCollaboratorName.trim() === "") {
+                alert("O nome do colaborador não pode ser vazio.");
+                return;
+            }
+
+            let isValid = true;
+            
+            for (let i = 0; i < allCollectedData[index].ajustes.length; i++) {
+                const data = document.getElementById(`edit-data-${index}-${i}`).value;
+                const horario = document.getElementById(`edit-horario-${index}-${i}`).value;
+                const motivo = document.getElementById(`edit-motivo-${index}-${i}`).value;
+
+                if (!data || !horario || !motivo) {
+                    alert(`O Ajuste #${i + 1} para ${newCollaboratorName} está incompleto.`);
+                    isValid = false;
+                    break;
+                }
+                
+                newAjustes.push({ data, horario, motivo });
+            }
+            
+            if (!isValid) return;
+
+            // 1. Atualiza o objeto global
+            allCollectedData[index].nomeColaborador = newCollaboratorName;
+            allCollectedData[index].ajustes = newAjustes;
+
+            // 2. Re-renderiza a tela de revisão
+            renderReview();
+            
+            // 3. Feedback
+            feedbackMessage.className = 'alert-message alert-success';
+            feedbackMessage.textContent = `✅ Correções para ${newCollaboratorName} salvas com sucesso!`;
+            feedbackMessage.style.display = 'block';
+            
+            // 4. Sai do modo de edição
+            toggleEditMode(index);
+        }
+        
+        // --- Função de Envio de Dados (A ser implementada no Backend) ---
+        
+        function sendFinalData() {
+            btnEnviarAjustesFinais.disabled = true;
+            btnEnviarAjustesFinais.textContent = 'Enviando...';
+
+            const dataForBackend = {
+                nomeGestor: document.getElementById('nomeGestorInput').value,
+                emailGestor: document.getElementById('emailGestor').value,
+                filial: document.getElementById('filialSelect').value,
+                ajustesMultiColaborador: allCollectedData 
+            };
+            
+            console.log('Dados prontos para envio ao Backend Serverless:', dataForBackend);
+
+            // SIMULAÇÃO DE ENVIO:
+            setTimeout(() => {
+                feedbackMessage.className = 'alert-message alert-success';
+                feedbackMessage.textContent = `✅ Ajustes para ${allCollectedData.length} colaborador(es) enviados com sucesso! (Simulação).`;
+                feedbackMessage.style.display = 'block';
+                
+                // Limpa TUDO após o envio bem-sucedido
+                allCollectedData = [];
+                ajustePontoForm.reset();
+                resetCollaboratorFields();
+                unlockGestorFields(); 
+                switchToFormView(); 
+                
+                btnEnviarAjustesFinais.disabled = false;
+                btnEnviarAjustesFinais.textContent = 'Enviar Ajustes';
+            }, 2000); 
+        }
+
+        // --- Inicialização ---
+        document.addEventListener('DOMContentLoaded', () => {
+            ajustePontoForm.addEventListener('submit', switchToReviewView);
+            updateAddButton();
+            document.getElementById('nomeGestorInput').focus();
+        });
+    </script>
+</body>
+</html>
