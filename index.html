@@ -378,8 +378,8 @@
         <header>
             <img src="assets/logo_locmed.png" alt="Logo Locmed" class="header-logo">
             
-            <h1>REGISTRO</h1>
-            <h2>AJUSTE DE PONTO</h2>
+            <h1>LOCMED</h1>
+            <h2>REGISTRO DE AJUSTE DE PONTO</h2>
             <p>Preencha os dados do gestor, do colaborador e os ajustes necessários.</p>
         </header>
 
@@ -389,7 +389,7 @@
             <h3>Acesso Restrito - Login</h3>
             <div class="form-group">
                 <label for="loginInput">Login (E-mail sem @empresaexemplo.com):</label>
-                <input type="text" id="loginInput" placeholder="login" required autofocus>
+                <input type="text" id="loginInput" placeholder="Ex: pedro.lima ou equipe.rh" required autofocus>
             </div>
             <button type="button" onclick="handleLogin()">Acessar Formulário</button>
             <p style="font-size: 0.8em; color: #999; margin-top: 15px;">Acesso permitido apenas a gestores e RH autorizados.</p>
@@ -553,8 +553,8 @@
         const emailGestorInput = document.getElementById('emailGestor');
         const filialSelect = document.getElementById('filialSelect');
         
-        // --- NOVO: Login do RH ---
-        const HR_LOGIN = 'rh.acesso'; 
+        // --- NOVO: Login do RH (AGORA DEFINIDO COMO 'equipe.rh') ---
+        const HR_LOGIN = 'equipe.rh'; 
         
         // --- LISTA DE GESTORES AUTORIZADOS PARA LOGIN ---
         const authorizedUsers = {
