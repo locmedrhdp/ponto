@@ -1,11 +1,14 @@
-// package.json (DEPENDÊNCIAS)
 {
   "name": "locmed-registro-ponto-backend",
   "version": "1.0.0",
   "description": "Backend para registro de ponto na Vercel",
   "main": "api/registrar.js",
+  "scripts": {
+    "start": "node api/registrar.js"
+  },
   "dependencies": {
     "googleapis": "^128.0.0",
-    "nodemailer": "^6.9.7"
+    "mailersend": "^2.2.0",
+    "google-auth-library": "^9.4.1" 
   }
 }
