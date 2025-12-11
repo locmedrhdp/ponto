@@ -625,7 +625,7 @@
                 
                 // Feedback
                 feedbackMessage.className = 'alert-message alert-success';
-                feedbackMessage.textContent = `✅ Acesso liberado! Logado como ${user.nome} ${user.filial}.<br>Por favor, informe seu e-mail.`;
+                feedbackMessage.innerHTML = `✅ Acesso liberado! Logado como ${user.nome}.<br>Por favor, informe seu e-mail.`;
                 feedbackMessage.style.display = 'block';
                 
                 // Bloqueia campos preenchidos e permite a edição do email
@@ -1121,3 +1121,4 @@
     </script>
 </body>
 </html>
+
