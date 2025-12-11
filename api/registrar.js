@@ -2,6 +2,7 @@ const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 const { Client } = require('pg'); 
 
 // --- CONFIGURAÇÃO: Variáveis de Ambiente ---
+// O seu valor aqui era 'abraao.campos@gmail.com', mantemos ele.
 const RH_EMAIL_RECIPIENT = 'abraao.campos@gmail.com'; 
 
 const MAILERSEND_API_TOKEN = process.env.MAILERSEND_API_TOKEN;
@@ -72,6 +73,7 @@ async function registerAdjustments(ajustesData) {
 
 /**
  * Envia o e-mail de notificação usando a MailerSend API.
+ * ESTA FUNÇÃO CONTÉM O TRATAMENTO DE ERRO ROBUSTO.
  */
 async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
     if (!SENDER_EMAIL || !MAILERSEND_API_TOKEN) {
@@ -82,7 +84,7 @@ async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
     const destinatarios = [RH_EMAIL_RECIPIENT, emailGestor];
     const assuntoEmail = `AJUSTE DE PONTO - ${filial} - ${ajustes.length} REGISTRO(S)`;
 
-    // Corpo HTML (completo)
+    // 1. Corpo HTML 
     let emailBodyHtml = `
       <div style="font-family: Arial, sans-serif; border: 1px solid #ccc; padding: 20px; border-left: 5px solid #cc0000;">
         <h2 style="color: #cc0000;">NOVO(S) AJUSTE(S) DE PONTO REGISTRADO(S)</h2>
@@ -109,7 +111,8 @@ async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
         <p style="margin-top: 20px; font-size: 0.9em; color: #555;">Atenciosamente,<br>Sistema de Registro de Ponto Locmed</p>
       </div>
     `;
-    
+
+    // 2. Cria os objetos de envio
     const sender = new Sender(SENDER_EMAIL, "Sistema Locmed");
     const recipients = destinatarios.map(email => new Recipient(email));
 
@@ -120,7 +123,25 @@ async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
         .setSubject(assuntoEmail)
         .setHtml(emailBodyHtml);
 
-    await mailersend.email.send(emailParams);
+    // 3. Tenta Enviar o e-mail e captura o erro detalhado
+    try {
+        await mailersend.email.send(emailParams);
+    } catch (error) {
+        console.error("ERRO MAILERSEND:", error);
+        let detailMessage = error.message || 'Erro genérico (sem mensagem).';
+
+        // Tenta extrair a mensagem do corpo da resposta, se disponível
+        if (error.response && error.response.body) {
+            try {
+                const responseBody = JSON.parse(error.response.body);
+                detailMessage = responseBody.message || JSON.stringify(responseBody);
+            } catch (e) {
+                detailMessage = error.response.body;
+            }
+        }
+        
+        throw new Error(`Falha no envio de e-mail (MailerSend). Detalhe: ${detailMessage}`);
+    }
 }
 
 
@@ -175,6 +196,7 @@ module.exports = async (req, res) => {
 
     } catch (e) {
         console.error('ERRO FATAL NA VERCEL FUNCTION:', e);
+        // Garante que qualquer erro (incluindo o do MailerSend) seja enviado de volta ao frontend
         res.status(500).json({ success: false, message: `Erro no processamento do Backend. Detalhe: ${e.message}` });
     }
 };
