@@ -111,7 +111,8 @@
             text-align: center;
         }
         
-        #login-view button, #hr-view button {
+        /* Botões da tela de Login (sem alinhamento/tamanho específico do RH) */
+        #login-view button {
             background-color: var(--primary-color);
             color: white;
             padding: 10px 20px;
@@ -127,23 +128,38 @@
             background-color: var(--secondary-color);
         }
 
+        /* Estilos para os botões principais de ação e botões do RH - PADRONIZAÇÃO */
+        .action-button {
+            color: white;
+            padding: 12px 20px; /* PADDING PADRONIZADO */
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px; /* Margem padrão para separar botões */
+            box-sizing: border-box; /* Garante que o padding não aumente a largura além de 100% */
+        }
+        
         /* Estilo para o link de download do RH */
         #downloadLink {
             background-color: #007bff; /* Azul para destaque */
-            color: white;
-            padding: 10px 20px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            width: 100%;
-            display: inline-block;
+            display: block; /* Essencial para que width: 100% funcione */
             text-decoration: none;
-            margin-top: 15px;
-            font-weight: bold;
         }
         
         #downloadLink:hover {
             background-color: #0056b3;
         }
+        
+        /* Estilo para o botão Sair do RH */
+        .rh-logout-btn {
+            background-color: #6c757d; /* Cor cinza do Sair */
+            margin-top: 10px; /* O mesmo que o botão acima, para alinhamento uniforme */
+        }
+
 
         /* NOVO ESTILO: Blocos de Fases */
         .phase-block {
@@ -211,19 +227,6 @@
             flex: 1;
         }
 
-        /* Estilo para os botões principais de ação */
-        .action-button {
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            transition: background-color 0.3s;
-            width: 100%;
-            margin-top: 10px;
-        }
 
         #btnConcluir {
             background-color: var(--primary-color);
@@ -378,8 +381,8 @@
         <header>
             <img src="assets/logo_locmed.png" alt="Logo Locmed" class="header-logo">
             
-            <h1>LOCMED</h1>
-            <h2>REGISTRO DE AJUSTE DE PONTO</h2>
+            <h1>REGISTRO</h1>
+            <h2>AJUSTE DE PONTO</h2>
             <p>Preencha os dados do gestor, do colaborador e os ajustes necessários.</p>
         </header>
 
@@ -389,7 +392,7 @@
             <h3>Acesso Restrito - Login</h3>
             <div class="form-group">
                 <label for="loginInput">Login (E-mail sem @empresaexemplo.com):</label>
-                <input type="text" id="loginInput" placeholder="Ex: pedro.lima ou equipe.rh" required autofocus>
+                <input type="text" id="loginInput" placeholder="nome.sobrenome" required autofocus>
             </div>
             <button type="button" onclick="handleLogin()">Acessar Formulário</button>
             <p style="font-size: 0.8em; color: #999; margin-top: 15px;">Acesso permitido apenas a gestores e RH autorizados.</p>
@@ -397,8 +400,8 @@
         <div id="hr-view" style="display: none;">
             <h3>Acesso Equipe de RH</h3>
             <p style="margin-bottom: 20px;">Clique no botão abaixo para baixar a planilha completa com todos os registros de ajuste de ponto.</p>
-            <a id="downloadLink" href="/api/download" class="action-button" style="background-color: #007bff; display: inline-block; width: 100%; text-decoration: none;">⬇️ Baixar Planilha de Registros (CSV)</a>
-            <button type="button" onclick="logout()" class="action-button" style="background-color: #6c757d; margin-top: 15px;">Sair</button>
+            <a id="downloadLink" href="/api/download" class="action-button">⬇️ Baixar Planilha de Registros (CSV)</a>
+            <button type="button" onclick="logout()" class="action-button rh-logout-btn">Sair</button>
         </div>
         <div id="form-view" style="display: none;">
             <form id="ajustePontoForm">
@@ -513,8 +516,8 @@
                     </div>
                 </div>
                 
-                <button type="button" id="btnAddAjuste" onclick="addAjuste()" class="action-button" style="background-color: #5cb85c;">+ Adicionar Mais um Ajuste (Máximo 3)</button>
-                <button type="button" id="btnOutroColaborador" onclick="startNewEmployee()" class="action-button">🔁 Salvar e Adicionar Outro Colaborador</button>
+                <button type="button" id="btnAddAjuste" onclick="addAjuste()" class="action-button" style="background-color: #5cb85c; font-size: 1em; padding: 8px 20px;">+ Adicionar Mais um Ajuste (Máximo 3)</button>
+                <button type="button" id="btnOutroColaborador" onclick="startNewEmployee()" class="action-button" style="background-color: #ff9800; font-size: 1em; padding: 8px 20px;">🔁 Salvar e Adicionar Outro Colaborador</button>
                 <button type="submit" id="btnConcluir" class="action-button">Concluir e Ir para Revisão</button>
             </form>
         </div>
@@ -553,7 +556,7 @@
         const emailGestorInput = document.getElementById('emailGestor');
         const filialSelect = document.getElementById('filialSelect');
         
-        // --- NOVO: Login do RH (AGORA DEFINIDO COMO 'equipe.rh') ---
+        // --- Login do RH ---
         const HR_LOGIN = 'equipe.rh'; 
         
         // --- LISTA DE GESTORES AUTORIZADOS PARA LOGIN ---
@@ -624,7 +627,7 @@
             }
         }
         
-        // --- NOVO: Função de Logout Comum para Gestor e RH ---
+        // --- Função de Logout Comum para Gestor e RH ---
         function logout() {
             // Volta para a tela de Login
             loginView.style.display = 'block';
