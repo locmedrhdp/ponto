@@ -1,38 +1,37 @@
 const { google } = require('googleapis');
 const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 
-// --- CONFIGURAÇÃO CHAVE: Variáveis de Ambiente ---
-// O Google Sheets API ID é o único que fica aqui, o resto será lido de forma segura pela Vercel.
+// --- CONFIGURAÇÃO: IDs e Nomes Fixos ---
 const PLANILHA_ID = '1gScRMCuIKiaD49zKQ0CmGAkxyV8CB1hO6PoDMta7WKs'; 
 const PLANILHA_ABA = 'REGISTRO';
-const RH_EMAIL = 'gestaodepessoas@locmed.com.br';
-// A Vercel lerá estas variáveis:
-const MAILERSEND_API_TOKEN = process.env.MAILERSEND_API_TOKEN;
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
+const RH_EMAIL_RECIPIENT = 'gestaodepessoas@locmed.com.br'; // Email do RH que recebe a notificação
 
-// A T E N Ç Ã O: SEM CONTA DE SERVIÇO, O REGISTRO SÓ FUNCIONARÁ SE A PLANILHA 
-// ESTIVER CONFIGURADA COM PERMISSÃO "QUALQUER PESSOA COM O LINK PODE EDITAR".
+// --- Variáveis de Ambiente (Lidas da Vercel) ---
+const MAILERSEND_API_TOKEN = process.env.MAILERSEND_API_TOKEN;
+const SENDER_EMAIL = process.env.MAILERSEND_SENDER_EMAIL; // locmed.rhdp@gmail.com
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; // AIzaSyBP9Ow1xDmbkvzWE9WYS0zbNRgpF7KWRaw
 
 // --- INICIALIZAÇÃO DE SERVIÇOS ---
+// O token do MailerSend é lido da variável de ambiente
 const mailersend = new MailerSend({
     apiKey: MAILERSEND_API_TOKEN,
 });
 
 /**
  * Registra todos os ajustes na planilha usando a Google Sheets API.
- * @param {Object[]} ajustesData - Array de ajustes processados.
+ * ATENÇÃO: Requer que a planilha esteja como "Qualquer pessoa com o link pode EDITAR" 
+ * ou a autenticação via API Key falhará na escrita.
+ * * @param {Object[]} ajustesData - Array de ajustes processados.
  */
 async function registerAdjustments(ajustesData) {
-    // 1. Cria a conexão não-autenticada (ou autenticada por API Key)
-    // O uso de `auth: GOOGLE_API_KEY` geralmente só permite leitura.
-    // Para escrita sem Conta de Serviço, o acesso deve ser público, mas usaremos
-    // a Google API Client para garantir a formatação correta.
+    if (!GOOGLE_API_KEY) {
+        throw new Error("GOOGLE_API_KEY não está configurada. Não é possível acessar a planilha.");
+    }
     
-    // Configura o cliente para usar uma API Key simples (geralmente só leitura)
-    // A ESCRITA *APENAS* FUNCIONARÁ SE VOCÊ COMPARTILHAR A PLANILHA COMO PÚBLICA (EDITAR).
+    // Configura o cliente da Google Sheets API
     const sheets = google.sheets({
         version: 'v4', 
-        auth: GOOGLE_API_KEY // Acesso por API Key, necessário para usar o cliente
+        auth: GOOGLE_API_KEY 
     });
 
     const values = ajustesData.map(ajuste => [
@@ -67,11 +66,15 @@ async function registerAdjustments(ajustesData) {
  * @param {string} nomeGestor - Nome do gestor
  */
 async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
+    if (!SENDER_EMAIL) {
+        throw new Error("MAILERSEND_SENDER_EMAIL não está configurada. Não é possível enviar e-mail.");
+    }
+
     const filial = ajustes[0].filial;
-    const destinatarios = [RH_EMAIL, emailGestor];
+    const destinatarios = [RH_EMAIL_RECIPIENT, emailGestor];
     const assuntoEmail = `AJUSTE DE PONTO - ${filial} - ${ajustes.length} REGISTRO(S)`;
 
-    // 1. Cria o corpo HTML
+    // 1. Cria o corpo HTML (mantido o formato anterior)
     let emailBodyHtml = `
       <div style="font-family: Arial, sans-serif; border: 1px solid #ccc; padding: 20px; border-left: 5px solid #cc0000;">
         <h2 style="color: #cc0000;">NOVO(S) AJUSTE(S) DE PONTO REGISTRADO(S)</h2>
@@ -80,7 +83,6 @@ async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
     `;
 
     ajustes.forEach((ajuste, index) => {
-        // Adaptação da data para formato brasileiro
         const dataFormatada = new Date(ajuste.data + 'T00:00:00').toLocaleDateString('pt-BR');
 
         emailBodyHtml += `
@@ -102,7 +104,7 @@ async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
     `;
 
     // 2. Cria os objetos de envio para o MailerSend
-    const sender = new Sender(process.env.MAILERSEND_SENDER_EMAIL || RH_EMAIL, "Sistema Locmed");
+    const sender = new Sender(SENDER_EMAIL, "Sistema Locmed");
     const recipients = destinatarios.map(email => new Recipient(email));
 
     const emailParams = new EmailParams()
@@ -121,6 +123,15 @@ async function sendNotificationEmail(ajustes, emailGestor, nomeGestor) {
  * Função principal da requisição Vercel (POST).
  */
 module.exports = async (req, res) => {
+    // Adiciona CORS Headers para permitir requisições do seu frontend
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Permite qualquer origem (pode restringir)
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
         return res.status(405).send('Método não permitido. Use POST.');
@@ -163,10 +174,6 @@ module.exports = async (req, res) => {
 
     } catch (e) {
         console.error('ERRO FATAL NA VERCEL FUNCTION:', e);
-        // Exemplo: Se o erro for de autenticação na planilha, a mensagem é crítica.
-        if (e.message && e.message.includes('API Key is invalid') || e.message.includes('Insufficient Permission')) {
-             return res.status(500).json({ success: false, message: `Erro de PERMISSÃO na Planilha. Verifique se ela está como 'Público: Editor' ou se a GOOGLE_API_KEY está configurada.` });
-        }
         res.status(500).json({ success: false, message: `Erro no processamento do Backend. Detalhe: ${e.message}` });
     }
 };
