@@ -45,7 +45,6 @@
             padding-bottom: 10px;
         }
         
-        /* NOVO ESTILO: Para o logo */
         .header-logo {
             max-width: 150px; /* Ajuste o tamanho conforme necessário */
             height: auto;
@@ -92,8 +91,8 @@
             box-shadow: 0 0 5px rgba(204, 0, 0, 0.3);
         }
 
-        /* Estilo específico para a tela de LOGIN */
-        #login-view {
+        /* Estilo específico para a tela de LOGIN e RH */
+        #login-view, #hr-view {
             max-width: 400px;
             margin: 40px auto;
             padding: 30px;
@@ -103,7 +102,7 @@
             text-align: center;
         }
         
-        #login-view h3 {
+        #login-view h3, #hr-view h3 {
             color: var(--primary-color);
             margin-bottom: 20px;
         }
@@ -112,7 +111,7 @@
             text-align: center;
         }
         
-        #login-view button {
+        #login-view button, #hr-view button {
             background-color: var(--primary-color);
             color: white;
             padding: 10px 20px;
@@ -128,6 +127,23 @@
             background-color: var(--secondary-color);
         }
 
+        /* Estilo para o link de download do RH */
+        #downloadLink {
+            background-color: #007bff; /* Azul para destaque */
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            width: 100%;
+            display: inline-block;
+            text-decoration: none;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        #downloadLink:hover {
+            background-color: #0056b3;
+        }
 
         /* NOVO ESTILO: Blocos de Fases */
         .phase-block {
@@ -373,10 +389,16 @@
             <h3>Acesso Restrito - Login</h3>
             <div class="form-group">
                 <label for="loginInput">Login (E-mail sem @empresaexemplo.com):</label>
-                <input type="text" id="loginInput" placeholder="nome.sobrenome" required autofocus>
+                <input type="text" id="loginInput" placeholder="login" required autofocus>
             </div>
             <button type="button" onclick="handleLogin()">Acessar Formulário</button>
-            <p style="font-size: 0.8em; color: #999; margin-top: 15px;">Acesso permitido apenas a gestores autorizados.</p>
+            <p style="font-size: 0.8em; color: #999; margin-top: 15px;">Acesso permitido apenas a gestores e RH autorizados.</p>
+        </div>
+        <div id="hr-view" style="display: none;">
+            <h3>Acesso Equipe de RH</h3>
+            <p style="margin-bottom: 20px;">Clique no botão abaixo para baixar a planilha completa com todos os registros de ajuste de ponto.</p>
+            <a id="downloadLink" href="/api/download" class="action-button" style="background-color: #007bff; display: inline-block; width: 100%; text-decoration: none;">⬇️ Baixar Planilha de Registros (CSV)</a>
+            <button type="button" onclick="logout()" class="action-button" style="background-color: #6c757d; margin-top: 15px;">Sair</button>
         </div>
         <div id="form-view" style="display: none;">
             <form id="ajustePontoForm">
@@ -531,6 +553,9 @@
         const emailGestorInput = document.getElementById('emailGestor');
         const filialSelect = document.getElementById('filialSelect');
         
+        // --- NOVO: Login do RH ---
+        const HR_LOGIN = 'rh.acesso'; 
+        
         // --- LISTA DE GESTORES AUTORIZADOS PARA LOGIN ---
         const authorizedUsers = {
             'pedro.lima': { nome: 'Pedro Henrique de Lima', filial: 'Matriz (CE)' },
@@ -553,6 +578,19 @@
         // --- FUNÇÃO DE LOGIN ---
         function handleLogin() {
             const login = loginInput.value.trim().toLowerCase();
+
+            // 1. Checa o Login do RH
+            if (login === HR_LOGIN) {
+                loginView.style.display = 'none';
+                document.getElementById('hr-view').style.display = 'block';
+                feedbackMessage.className = 'alert-message alert-success';
+                feedbackMessage.textContent = '✅ Acesso liberado para a Equipe de RH.';
+                feedbackMessage.style.display = 'block';
+                return; // Sai da função, não prossegue para o formulário do gestor
+            }
+
+
+            // 2. Checa o Login do Gestor
             const user = authorizedUsers[login];
 
             if (user) {
@@ -586,6 +624,29 @@
             }
         }
         
+        // --- NOVO: Função de Logout Comum para Gestor e RH ---
+        function logout() {
+            // Volta para a tela de Login
+            loginView.style.display = 'block';
+            formView.style.display = 'none';
+            reviewView.style.display = 'none';
+            document.getElementById('hr-view').style.display = 'none'; // Esconde a view do RH
+            
+            // Limpa dados do formulário do Gestor
+            allCollectedData = []; 
+            ajustePontoForm.reset(); 
+            resetCollaboratorFields();
+            
+            // Limpa campos do gestor (para um novo login)
+            nomeGestorInput.value = '';
+            emailGestorInput.value = '';
+            filialSelect.value = ''; 
+            
+            loginInput.value = '';
+            loginInput.focus();
+            feedbackMessage.style.display = 'none';
+        }
+
         // --- Funções de Navegação e Estado ---
 
         function switchToFormView() {
@@ -947,16 +1008,8 @@
                 if (response.ok) {
                     feedbackMessage.className = 'alert-message alert-success';
                     feedbackMessage.textContent = `✅ Ajustes para ${allCollectedData.length} colaborador(es) enviados com sucesso!`;
-                    // Limpa TUDO após o envio bem-sucedido
-                    allCollectedData = [];
-                    ajustePontoForm.reset();
-                    resetCollaboratorFields();
-                    
-                    // Volta para a tela de Login
-                    loginView.style.display = 'block';
-                    formView.style.display = 'none';
-                    loginInput.value = '';
-                    loginInput.focus();
+                    // Limpa TUDO após o envio bem-sucedido e volta para o login
+                    logout();
                     
                 } else {
                     feedbackMessage.className = 'alert-message alert-error';
